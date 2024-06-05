@@ -1,18 +1,15 @@
 package com.eldar.simulator.server.radius;
 
 import java.net.*;
-import java.util.Arrays;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.eldar.simulator.server.radius.utils.ServerUtils;
-
-public class Server {
+public class OldServer {
     private final HashMap<String, String> userDatabase;
-    private static final Logger logger = LoggerFactory.getLogger(Server.class);
+    private static final Logger logger = LoggerFactory.getLogger(OldServer.class);
 
-    public Server() {
+    public OldServer() {
         userDatabase = new HashMap<>();
         userDatabase.put("user1", "pass1");
         userDatabase.put("user2", "pass2");

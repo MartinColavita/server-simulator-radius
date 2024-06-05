@@ -8,11 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.io.*;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.HashMap;
 
 @SpringBootApplication
@@ -20,7 +18,6 @@ public class RadiusApplication {
     private static final Logger logger = LoggerFactory.getLogger(RadiusApplication.class);
 
     private static PropertiesBeanApp propertiesBeanApp;
-    private static int threadCount = 0; // Contador de hilos
 
     @Autowired
     public RadiusApplication(PropertiesBeanApp propertiesBean) {
@@ -48,75 +45,54 @@ public class RadiusApplication {
         ServerUtils.showServerInfo(String.valueOf(port), propertiesBeanApp.getEnvironment());
         ServerUtils.showWaitingTime(propertiesBeanApp.getWaitTimeout());
 
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            logger.info("\u001B[36mIniciado el servidor TCP\u001B[0m");
-            //START: Loop que se mantiene escuchando
+        // Crear un DatagramSocket para escuchar en el puerto especificado
+        try (DatagramSocket serverSocket = new DatagramSocket(port)) {
+            logger.info("\u001B[36mIniciado el servidor UDP\u001B[0m");
+
+            // Loop principal que se mantiene escuchando por paquetes
             while (true) {
-                Socket clientSocket = serverSocket.accept();
-                Thread thread = new Thread(new ClientHandler(clientSocket));
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
+                // Esperar a recibir un paquete
+                serverSocket.receive(receivePacket);
+
+
+                String request = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                System.out.println(receivePacket);
+                System.out.println(request);
+
+                // Crear un nuevo hilo para manejar la solicitud recibida
+                Thread thread = new Thread(new ClientHandler(receivePacket));
                 thread.start();
-                synchronized (RadiusApplication.class) {
-                    threadCount++;
-                }
             }
-            //END: Loop que se mantiene escuchando
         } catch (IOException ex) {
-            logger.error("\u001B[36mError al iniciar el servidor TCP\u001B[0m",ex);
+            logger.error("\u001B[36mError al iniciar el servidor UDP\u001B[0m", ex);
         }
     }
 
+    // Clase interna para manejar la solicitud de un cliente en un hilo separado
     private static class ClientHandler implements Runnable {
-        private final Socket clientSocket;
+        private final DatagramPacket receivePacket;
 
-        public ClientHandler(Socket socket) {
-            this.clientSocket = socket;
+        public ClientHandler(DatagramPacket receivePacket) {
+            this.receivePacket = receivePacket;
         }
 
         @Override
         public void run() {
+            // Obtener la solicitud del cliente
+            String request = new String(receivePacket.getData(), 0, receivePacket.getLength());
+            // Crear la respuesta
+            String response = "¡Server Response To " + receivePacket.getAddress().getHostAddress();
 
-            StringBuilder responseMessage = new StringBuilder();
-            String estado="";
-            String request="";
-
-            InetAddress clientAddress = clientSocket.getInetAddress();
-
-            ServerUtils.showOpenedSocketThreadInfo(clientSocket,threadCount);
-
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-
-                clientSocket.setSoTimeout(Integer.parseInt(propertiesBeanApp.getWaitTimeout()));
-
-                request = in.readLine(); // Leer el mensaje del cliente
-                if (request == null) {
-                    return;
-                }
-
-                // Start: Simulo Tiempo de Espera. Para Responder
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                // End: Simulo Tiempo de Espera
-
-                responseMessage.append("¡Server Response To ").append(clientAddress.getHostAddress());
-                out.println(responseMessage);
-            } catch (SocketTimeoutException e) {
-                estado="NODATA";
-            } catch (IOException e) {
-                logger.error("Error al manejar la conexión del cliente", e);
-            } finally {
-                try {
-                    clientSocket.close();
-                } catch (IOException ex) {
-                    logger.error("Error al cerrar el socket", ex);
-                }
-                synchronized (RadiusApplication.class) {
-                    threadCount--;
-                    ServerUtils.showClosedSocketThreadInfo(clientSocket,threadCount,request, String.valueOf(responseMessage),estado);
-                }
+            // Enviar la respuesta de vuelta al cliente
+            try (DatagramSocket serverSocket = new DatagramSocket()) {
+                byte[] sendData = response.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                serverSocket.send(sendPacket); // Enviar respuesta al cliente
+            } catch (IOException ex) {
+                logger.error("\u001B[36mError al manejar la conexión del cliente\u001B[0m", ex);
             }
         }
     }

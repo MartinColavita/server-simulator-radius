@@ -58,27 +58,27 @@ public class ServerUtils {
         }
     }
 
-    public static void showClosedSocketThreadInfo(Socket clientSocket, int threadCount, String request, String response, String estado){
-        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-        ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
-
-        InetAddress clientAddress = clientSocket.getInetAddress();
-        String ipClient=clientAddress.getHostAddress();
-        String socketPortClient= String.valueOf(clientSocket.getPort());
-
-        for (ThreadInfo threadInfo : threadInfos) {
-            if (Thread.currentThread().getId() == threadInfo.getThreadId()) {
-                switch (estado){
-                    case "NODATA":
-                        logClosedThreadInfoWithoutData(threadInfo, socketPortClient, ipClient, threadCount, request, response);
-                        break;
-                    default:
-                        logClosedThreadInfo(threadInfo, socketPortClient, ipClient, threadCount, request, response);
-                        break;
-                }
-            }
-        }
-    }
+//    public static void showClosedSocketThreadInfo(InetAddress clientSocket, int threadCount, String request, String response, String estado){
+//        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+//        ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
+//
+//        InetAddress clientAddress = clientSocket.getInetAddress();
+//        String ipClient=clientAddress.getHostAddress();
+//        String socketPortClient= String.valueOf(clientSocket.getPort());
+//
+//        for (ThreadInfo threadInfo : threadInfos) {
+//            if (Thread.currentThread().getId() == threadInfo.getThreadId()) {
+//                switch (estado){
+//                    case "NODATA":
+//                        logClosedThreadInfoWithoutData(threadInfo, socketPortClient, ipClient, threadCount, request, response);
+//                        break;
+//                    default:
+//                        logClosedThreadInfo(threadInfo, socketPortClient, ipClient, threadCount, request, response);
+//                        break;
+//                }
+//            }
+//        }
+//    }
 
     private static void logClosedThreadInfo(ThreadInfo threadInfo, String socketPortClient, String ipClient, int threadCount, String request, String response) {
         StringBuilder messageBuilder = new StringBuilder();
@@ -121,5 +121,8 @@ public class ServerUtils {
                 .append(" MOTIVO: ").append("Client don't send data - From IP: "+ ipClient+response+"\u001B[0m");
 
         logger.info(messageBuilder.toString());
+    }
+
+    public static void showOpenedSocketThreadInfo(InetAddress clientAddress, int clientPort, int threadCount) {
     }
 }
