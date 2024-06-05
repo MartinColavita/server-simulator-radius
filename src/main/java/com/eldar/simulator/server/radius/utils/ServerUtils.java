@@ -6,8 +6,10 @@ import org.slf4j.LoggerFactory;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServerUtils {
 
@@ -43,12 +45,11 @@ public class ServerUtils {
         }
     }
 
-    public static void showOpenedSocketThreadInfo(Socket clientSocket, int threadCount){
+    public static void showOpenedSocketThreadInfo(DatagramPacket clientSocket, AtomicInteger threadCount){
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
         ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
 
-        InetAddress clientAddress = clientSocket.getInetAddress();
-        String ipClient=clientAddress.getHostAddress();
+        String ipClient=clientSocket.getAddress().getHostAddress() ;
         String socketPortClient= String.valueOf(clientSocket.getPort());
 
         for (ThreadInfo threadInfo : threadInfos) {
@@ -58,27 +59,29 @@ public class ServerUtils {
         }
     }
 
-//    public static void showClosedSocketThreadInfo(InetAddress clientSocket, int threadCount, String request, String response, String estado){
-//        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-//        ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
-//
+    public static void showClosedSocketThreadInfo(int clientSocket, int threadCount, String request, String response, String estado){
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
+
 //        InetAddress clientAddress = clientSocket.getInetAddress();
 //        String ipClient=clientAddress.getHostAddress();
+        String ipClient="192.168.1.44";
 //        String socketPortClient= String.valueOf(clientSocket.getPort());
-//
-//        for (ThreadInfo threadInfo : threadInfos) {
-//            if (Thread.currentThread().getId() == threadInfo.getThreadId()) {
-//                switch (estado){
-//                    case "NODATA":
-//                        logClosedThreadInfoWithoutData(threadInfo, socketPortClient, ipClient, threadCount, request, response);
-//                        break;
-//                    default:
-//                        logClosedThreadInfo(threadInfo, socketPortClient, ipClient, threadCount, request, response);
-//                        break;
-//                }
-//            }
-//        }
-//    }
+        String socketPortClient= "2323";
+
+        for (ThreadInfo threadInfo : threadInfos) {
+            if (Thread.currentThread().getId() == threadInfo.getThreadId()) {
+                switch (estado){
+                    case "NODATA":
+                        logClosedThreadInfoWithoutData(threadInfo, socketPortClient, ipClient, threadCount, request, response);
+                        break;
+                    default:
+                        logClosedThreadInfo(threadInfo, socketPortClient, ipClient, threadCount, request, response);
+                        break;
+                }
+            }
+        }
+    }
 
     private static void logClosedThreadInfo(ThreadInfo threadInfo, String socketPortClient, String ipClient, int threadCount, String request, String response) {
         StringBuilder messageBuilder = new StringBuilder();
