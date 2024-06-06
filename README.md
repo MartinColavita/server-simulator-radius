@@ -3,8 +3,8 @@
 Esto va a ser un servidor de simulación de Radius, que va a recibir un hexadecimal con el formate que acepta radius y lo va a validar si esta en la base de datos ese hexadecimal.
 
 Para probar esto, se puede utilizar packet sender.
-con la ip localhost y el puerto 1812 y un paquete UDP.
-luego en el campo de texto se pone el hexadecimal que se quiere enviar (hexa completo a enviar) de cada uno de los usuarios de prueba, solo estan estos 3 en la db de prueba.
+ - la ip localhost y el puerto 1812 y un paquete UDP.
+ - en el campo de texto se pone el hexadecimal que se quiere enviar (hexa completo a enviar) de cada uno de los usuarios de prueba, solo estan estos 3 en la db de prueba.
 ![img.png](img-packet_sender.png)
 
 
